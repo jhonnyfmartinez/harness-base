@@ -33,7 +33,7 @@ This repo mirrors `~/.agents/` one to one.
 Clone and copy the mirror:
 
 ```bash
-git clone https://github.com/<you>/harness-base.git
+git clone https://github.com/jhonnyfmartinez/harness-base.git
 mkdir -p ~/.agents
 cp -R harness-base/AGENTS.md harness-base/skills harness-base/agents harness-base/templates ~/.agents/
 ```
