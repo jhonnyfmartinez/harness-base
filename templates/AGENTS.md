@@ -61,3 +61,4 @@ Per-feature state lives in `.agents/work/<feature-slug>/` (gitignored — add `.
 - **Commits:** Conventional Commits. Scopes: `<list>`
 - **Branches:** `<pattern, e.g. feat/<slug>>`
 - **Tests live in:** `<location>`
+- **Architecture diagrams live in:** `<docs/architecture.md | a README section | none>`

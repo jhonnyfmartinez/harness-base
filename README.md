@@ -6,7 +6,7 @@ Agent-agnostic setup for AI coding tools. One set of markdown files that any age
 
 - **`AGENTS.md`** — user-level rules: writing style, workflow discipline, production bar.
 - **`skills/`** — the five workflow phases (`/research`, `/plan`, `/implement`, `/review`, `/address-pr`) plus `/sync` for closing out work.
-- **`agents/`** — subagent definitions (currently the cold-context `code-reviewer`).
+- **`agents/`** — the six subagents the phases spawn: `codebase-explorer` and `external-researcher` (research), `plan-validator` (plan), `code-reviewer` and `doc-diagrammer` (review), `pr-comment-triager` (address-pr).
 - **`templates/AGENTS.md`** — fill-in-the-blanks project file. Copy to a project root.
 - **`templates/PROJECT_CLAUDE.md`** — optional Claude-only project notes.
 - **`templates/project-agents/`** — skeleton for a project's `.agents/` folder (README + PR/ticket templates).
@@ -28,7 +28,7 @@ This repo mirrors `~/.agents/` one to one.
 | `hooks/` | `~/.agents/hooks/` | copy |
 | `pointers/CLAUDE.md` | `~/.claude/CLAUDE.md` | copy |
 | `skills/<name>/` | `~/.claude/skills/<name>` | symlink |
-| `agents/code-reviewer.md` | `~/.claude/agents/code-reviewer.md` | symlink |
+| `agents/<name>.md` | `~/.claude/agents/<name>.md` | symlink |
 | `templates/AGENTS.md` | `<project>/AGENTS.md` | copy per project, fill in |
 | `templates/project-agents/` | `<project>/.agents/` | copy per project |
 
@@ -52,7 +52,9 @@ cp harness-base/pointers/CLAUDE.md ~/.claude/CLAUDE.md
 for s in research plan implement review address-pr sync; do
   ln -sfn ../../.agents/skills/$s ~/.claude/skills/$s
 done
-ln -sfn ../../.agents/agents/code-reviewer.md ~/.claude/agents/code-reviewer.md
+for a in ~/.agents/agents/*.md; do
+  ln -sfn "../../.agents/agents/$(basename "$a")" ~/.claude/agents/"$(basename "$a")"
+done
 ```
 
 Turn on the pattern nudges by adding this to `~/.claude/settings.json` (merge with any hooks already there):
