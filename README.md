@@ -10,6 +10,8 @@ Agent-agnostic setup for AI coding tools. One set of markdown files that any age
 - **`templates/AGENTS.md`** — fill-in-the-blanks project file. Copy to a project root.
 - **`templates/PROJECT_CLAUDE.md`** — optional Claude-only project notes.
 - **`templates/project-agents/`** — skeleton for a project's `.agents/` folder (README + PR/ticket templates).
+- **`patterns/`** — implementation preferences that steer the agent after every code edit. Plain markdown, readable by any tool.
+- **`hooks/`** — the Claude Code adapter that delivers those patterns.
 - **`pointers/CLAUDE.md`** — two-line file that makes Claude Code read `AGENTS.md`.
 
 ## Where each file goes
@@ -22,6 +24,8 @@ This repo mirrors `~/.agents/` one to one.
 | `skills/` | `~/.agents/skills/` | copy |
 | `agents/` | `~/.agents/agents/` | copy |
 | `templates/` | `~/.agents/templates/` | copy |
+| `patterns/` | `~/.agents/patterns/` | copy |
+| `hooks/` | `~/.agents/hooks/` | copy |
 | `pointers/CLAUDE.md` | `~/.claude/CLAUDE.md` | copy |
 | `skills/<name>/` | `~/.claude/skills/<name>` | symlink |
 | `agents/code-reviewer.md` | `~/.claude/agents/code-reviewer.md` | symlink |
@@ -35,7 +39,9 @@ Clone and copy the mirror:
 ```bash
 git clone https://github.com/jhonnyfmartinez/harness-base.git
 mkdir -p ~/.agents
-cp -R harness-base/AGENTS.md harness-base/skills harness-base/agents harness-base/templates ~/.agents/
+cp -R harness-base/AGENTS.md harness-base/skills harness-base/agents \
+      harness-base/templates harness-base/patterns harness-base/hooks ~/.agents/
+chmod +x ~/.agents/hooks/implementation-patterns.py
 ```
 
 Point Claude Code at it:
@@ -47,6 +53,27 @@ for s in research plan implement review address-pr sync; do
   ln -sfn ../../.agents/skills/$s ~/.claude/skills/$s
 done
 ln -sfn ../../.agents/agents/code-reviewer.md ~/.claude/agents/code-reviewer.md
+```
+
+Turn on the pattern nudges by adding this to `~/.claude/settings.json` (merge with any hooks already there):
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.agents/hooks/implementation-patterns.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
 
 Other tools: point them at `~/.agents/AGENTS.md` the way that tool loads global rules, and link `~/.agents/skills/` into its skills folder if it has one.
@@ -68,3 +95,24 @@ echo ".agents/work/" >> <project>/.gitignore
 5. `/address-pr <number>` — triages PR comments into must-fix, push-back, and deferred.
 
 Each phase writes its state to `.agents/work/<slug>/` in the project, including a `progress.md` any tool can resume from.
+
+## How the pattern nudges work
+
+Rules live in `patterns/` as plain markdown, split by language. Each rule is a name, a regex that decides when it applies, and two lines of advice:
+
+```markdown
+## prefer-composition
+trigger: \bclass\s+\w+\s+extends\s+
+Prefer composition over inheritance. Extract the shared behavior into a function
+or injected dependency instead of a base class — it stays testable and swap-able.
+```
+
+After the agent edits a code file, the hook checks that file against the rules for its extension and feeds back only the ones that matched. Rules are judgment calls, never things a linter, formatter, compiler, or test already catches.
+
+Three limits keep it from becoming noise:
+
+- Silent when nothing matches.
+- At most two nudges per edit.
+- Each rule fires once per session.
+
+The hook always exits 0, so it steers the agent without ever blocking or failing a turn. Edit the markdown to change your preferences — no code changes needed.
