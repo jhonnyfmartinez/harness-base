@@ -58,6 +58,7 @@ Each item, individually graded:
 - Inconsistent naming, import order, file organization
 - Premature abstraction (introducing a class/interface for one caller)
 - Dead code, TODOs without issue links
+- Comments that narrate the change ("used to", "now returns", "renamed from") rather than explain the code — those belong in the PR diff, not the codebase
 
 ### 5. Test quality
 

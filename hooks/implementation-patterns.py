@@ -11,7 +11,7 @@ Guarantees:
 
 Pattern file format (see patterns/general.md):
     ## rule-name
-    trigger: <python regex tested against the edited file's content>
+    trigger: <python regex matched against the file's content, multiline>
     <nudge text until the next ## heading>
 """
 
@@ -85,7 +85,7 @@ def main() -> None:
             if name in seen or len(nudges) >= MAX_NUDGES_PER_EDIT:
                 continue
             try:
-                if re.search(trigger, content):
+                if re.search(trigger, content, re.MULTILINE):
                     nudges.append(f"[{name}] {text}")
                     seen.add(name)
             except re.error:

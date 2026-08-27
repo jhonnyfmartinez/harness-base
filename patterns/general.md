@@ -3,6 +3,7 @@
 > Seed rules. Replace or extend with your own preferences.
 > Format per rule: `## <kebab-name>`, a `trigger:` regex tested against the
 > edited file, then the nudge text (keep it to two lines: rule + why).
+> Regexes run multiline, so `^` and `$` match at line boundaries.
 > These are judgment calls only — anything a linter, formatter, compiler, or
 > test can catch does NOT belong here.
 
@@ -25,3 +26,19 @@ A bare rethrow adds nothing. Either let the error propagate or wrap it with cont
 ## no-timeout-syncing
 trigger: setTimeout\s*\(\s*[^,]+,\s*\d{1,4}\s*\)
 A short setTimeout usually papers over a race. Find the event or promise to await instead of guessing a delay.
+
+## comments-earn-their-place
+trigger: (^[ \t]*//[^\n]*\n){3,}
+Three comment lines in a row means the code isn't saying it itself — rename, extract, or restructure first. One or two lines are fine when a constraint genuinely can't be shown in code.
+
+## no-change-narration
+trigger: (?i)//[^\n]*\b(used to|previously|no longer|instead of|changed (from|to)|renamed|we now|this now)\b
+This comment explains the change, not the code, so it turns into noise the moment it merges. Put it in the PR diff instead and leave only what the next reader needs.
+
+## no-magic-values
+trigger: [=!]==\s*['"][^'"\n]{2,}['"]|[=!]==\s*-?\d{3,}|case\s+['"]
+A raw string or number hides what it means and drifts apart from its other copies. Name it — in TypeScript an `as const` object literal keeps the values and their type together.
+
+## log-prefix
+trigger: (console|logger)\.(log|error|warn|info|debug)\s*\(\s*['"`](?!\$\{)
+Prefix each log with its source, e.g. console.log(`${AuthService.name}: PKCE error`). With no enclosing class, use a file-level const naming the file — unprefixed logs can't be traced back.
